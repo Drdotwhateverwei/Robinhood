@@ -1,13 +1,66 @@
+rm(list = ls())
+
+#Use RSelenium to navigate and autoload the target webpage
+library(RSelenium)
+
+link<-"https://apps.apple.com/us/app/binance-crypto-trading-app/id1436799971#see-all/reviews"
+driver<-RSelenium::rsDriver(port = 4567L, 
+                            browser = "chrome", 
+                            version = "latest", 
+                            chromever = "81.0.4044.138")
+remDr<-driver[["client"]]
+remDr$navigate(link)
+
+for(i in 1:10){
+  remDr$executeScript(paste("scroll(0,",i*10000,");"))
+  Sys.sleep(3)
+}
+
+#Scrape information from the fully-loaded webpage
 library(rvest)
 library(tidyverse)
 
-setwd("/Users/Robin/Desktop/...")
-link<-"https://apps.apple.com/us/app/..."
-web<-read_html(link, encoding = "UTF-8")
-userid<-web %>% html_nodes("span.we-customer-review__user") %>% html_text()
-date<-web %>% html_nodes("time.we-customer-review__date") %>% html_text()
-title<-web %>% html_nodes("h3.we-customer-review__title") %>% html_text()
-review<-web %>% html_nodes("blockquote.we-customer-review__body") %>% html_text()
-rating<-web %>% html_nodes("figure.we-customer-review__rating") %>% html_attr("aria-label") %>% substr(1,1) %>% as.numeric()
-df<-data.frame(userid,title,date,rating,review)
-write_csv(df,path = "reviews_app store.csv")
+page_source<-remDr$getPageSource()
+web<-read_html(unlist(page_source), encoding = "UTF-8")
+
+review_id<-web %>% 
+  html_nodes("span.we-customer-review__user") %>% 
+  html_text()
+
+review_title<-web %>% 
+  html_nodes("h3.we-customer-review__title") %>% 
+  html_text()
+
+review_date<-web %>% 
+  html_nodes("time.we-customer-review__date") %>% 
+  html_text()
+
+review_rating<-web %>% 
+  html_nodes("figure.we-customer-review__rating") %>% 
+  html_attr("aria-label") %>% 
+  substr(1,1) %>% 
+  as.numeric()
+
+review_body<-web %>% 
+  html_nodes("blockquote.we-customer-review__body") %>% 
+  html_text()
+
+review_results<-data.frame(ID = review_id,
+                           Title = review_title,
+                           Date = review_date,
+                           Rating = review_rating,
+                           Body = review_body)
+remDr$close()
+
+#Write dataframe into excel file
+library(writexl)
+setwd("/Users/robinwei/Desktop/App store scraping/Data")
+write_xlsx(review_results, path = "reviews_app store.xlsx")
+
+View(review_results)
+
+
+
+
+
+
