@@ -3,7 +3,7 @@ rm(list = ls())
 #Use RSelenium to navigate and autoload the target webpage
 library(RSelenium)
 
-link<-"https://apps.apple.com/us/app/binance-crypto-trading-app/id1436799971#see-all/reviews"
+link<-"/pagetoscrape/..."
 driver<-RSelenium::rsDriver(port = 4567L, 
                             browser = "chrome", 
                             version = "latest", 
