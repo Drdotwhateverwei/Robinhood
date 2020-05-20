@@ -36,7 +36,8 @@ review_title<-web %>%
 
 review_date<-web %>% 
   html_nodes("time.we-customer-review__date") %>% 
-  html_text()
+  html_text() %>%
+  as.Date("%m/%d/%Y")
 
 review_rating<-web %>% 
   html_nodes("figure.we-customer-review__rating") %>% 
