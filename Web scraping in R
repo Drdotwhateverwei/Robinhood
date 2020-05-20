@@ -3,7 +3,7 @@ rm(list = ls())
 #Use RSelenium to navigate and autoload the target webpage
 library(RSelenium)
 
-link<-"/pagetoscrape/..."
+link<-"https://apps.apple.com/us/app/binance-crypto-trading-app/id1436799971#see-all/reviews"
 driver<-RSelenium::rsDriver(port = 4567L, 
                             browser = "chrome", 
                             version = "latest", 
@@ -11,13 +11,14 @@ driver<-RSelenium::rsDriver(port = 4567L,
 remDr<-driver[["client"]]
 remDr$navigate(link)
 
-for(i in 1:10){
+for(i in 1:15){
   remDr$executeScript(paste("scroll(0,",i*10000,");"))
   Sys.sleep(3)
 }
 
 #Scrape information from the fully-loaded webpage
 library(rvest)
+library(stringr)
 library(tidyverse)
 
 page_source<-remDr$getPageSource()
@@ -25,11 +26,13 @@ web<-read_html(unlist(page_source), encoding = "UTF-8")
 
 review_id<-web %>% 
   html_nodes("span.we-customer-review__user") %>% 
-  html_text()
+  html_text() %>%
+  str_trim(side = "both")
 
 review_title<-web %>% 
   html_nodes("h3.we-customer-review__title") %>% 
-  html_text()
+  html_text() %>%
+  str_trim(side = "both")
 
 review_date<-web %>% 
   html_nodes("time.we-customer-review__date") %>% 
@@ -43,7 +46,17 @@ review_rating<-web %>%
 
 review_body<-web %>% 
   html_nodes("blockquote.we-customer-review__body") %>% 
-  html_text()
+  html_text() %>%
+  str_trim(side = "both")
+
+##Function for removing the trailing "more" in the review
+removal_of_more <- function(x){
+  ifelse(str_sub(x,-4,-1)=="more",substr(x,1,nchar(x)-4),x)
+}
+
+##Apply removal_of_more function to the reviews, and kill the trailing space
+review_body<-lapply(review_body,removal_of_more) %>%
+  str_trim(side = "both")
 
 review_results<-data.frame(ID = review_id,
                            Title = review_title,
@@ -58,9 +71,5 @@ setwd("/Users/robinwei/Desktop/App store scraping/Data")
 write_xlsx(review_results, path = "reviews_app store.xlsx")
 
 View(review_results)
-
-
-
-
 
 
