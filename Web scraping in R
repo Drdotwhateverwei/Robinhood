@@ -3,16 +3,17 @@ rm(list = ls())
 #Use RSelenium to navigate and autoload the target webpage
 library(RSelenium)
 
-link<-"/websitetoscrape/..."
+link<-"https://.../reviews"
 driver<-RSelenium::rsDriver(port = 4567L, 
                             browser = "chrome", 
                             version = "latest", 
-                            chromever = "81.0.4044.138")
+                            chromever = "83.0.4103.39")
 remDr<-driver[["client"]]
 remDr$navigate(link)
 
-for(i in 1:15){
-  remDr$executeScript(paste("scroll(0,",i*10000,");"))
+for(i in 1:10){
+  remDr$executeScript("window.scrollTo(0,document.body.scrollHeight);")
+  ##remDr$executeScript(paste("scroll(0,",i*10000,");"))
   Sys.sleep(3)
 }
 
@@ -68,8 +69,8 @@ remDr$close()
 
 #Write dataframe into excel file
 library(writexl)
-setwd("/Users/robinwei/Desktop/App store scraping/Data")
-write_xlsx(review_results, path = "reviews_app store.xlsx")
+setwd("/Users/.../Desktop")
+write_xlsx(review_results, path = "app_reviews.xlsx")
 
 View(review_results)
 
